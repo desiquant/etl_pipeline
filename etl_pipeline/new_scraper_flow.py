@@ -8,6 +8,7 @@ def run_spider():
         - Since scrapy runs crawler with twisted reactor, it was getting hard to run each individual spider as a separate task. Ideally that is how it should work. Right now, results from all the spiders are clumped and we can not see how each spider has outputted. You can view the progress for parallel spiders in: https://github.com/desiquant/news_scraper/blob/632ca518cda3c65669cb89a68cea2af701d113a4/prefect-test.py It needs more work though
     """
     import os
+    from datetime import datetime
 
     from news_scraper.spiders import (
         BusinessStandardSpider,
@@ -37,6 +38,8 @@ def run_spider():
             # "CLOSESPIDER_ITEMCOUNT": 10,  # Stop after scraping 10 items
             # "CONCURRENT_REQUESTS": 5,  # If default concurrent is used, it ignores itemcount limit
             # "CLOSESPIDER_TIMEOUT": 30,  # Stop after 30 seconds,
+            "DATE_RANGE": ("2024-01-01", datetime.today()),
+            "SCRAPE_MODE": "dump",
             "HTTPCACHE_ENABLED": True,  # Enable HTTP cache
             "LOG_FILE": "scrapy.log",  # Log file path
         }
@@ -65,7 +68,7 @@ def convert_to_parquet():
     from glob import glob
     from pathlib import Path
 
-    from etl_pipeline.utils import jl_to_parquet
+    from utils import jl_to_parquet
 
     OUTPUT_FILEPATHS = glob("data/outputs/*.jl")
 
@@ -85,7 +88,7 @@ def convert_to_parquet():
 
 @task(log_prints=True)
 def upload_to_s3():
-    from etl_pipeline.utils import upload_folder_to_s3
+    from utils import upload_folder_to_s3
 
     upload_folder_to_s3(
         local_folder="data/s3",
