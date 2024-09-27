@@ -10,15 +10,15 @@ import pyarrow.parquet as pq
 from dotenv import load_dotenv
 
 
-def jl_to_parquet(input_paths: List[str], output_path: str):
-    """Given a list of JSON lines files, converts them to parquet"""
+def csv_to_parquet(input_paths: List[str], output_path: str):
+    """Given a list of CSV files, converts them to a single parquet"""
     writer = None
 
     # create output parent dirs if does not exist
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
     for i, file_path in enumerate(input_paths, 1):
-        reader = pd.read_json(file_path, lines=True, chunksize=20000)
+        reader = pd.read_csv(file_path, chunksize=20000)
 
         for chunk in reader:
             table = pa.Table.from_pandas(chunk)

@@ -9,6 +9,7 @@ def run_spider():
     """
     import os
     from datetime import datetime
+    from pathlib import Path
 
     from news_scraper.spiders import (
         BusinessStandardSpider,
@@ -31,6 +32,9 @@ def run_spider():
 
     os.environ["SCRAPY_SETTINGS_MODULE"] = "news_scraper.settings"
 
+    log_file = Path(f"logs/{datetime.now().strftime("%Y-%m-%d/%H:%M:%S")}.log")
+    log_file.parent.mkdir(parents=True, exist_ok=True)  # create log dirs
+
     settings = get_project_settings()
     settings.update(
         {
@@ -41,7 +45,7 @@ def run_spider():
             "DATE_RANGE": ("2024-01-01", datetime.today()),
             "SCRAPE_MODE": "dump",
             "HTTPCACHE_ENABLED": True,  # Enable HTTP cache
-            "LOG_FILE": "scrapy.log",  # Log file path
+            "LOG_FILE": str(log_file),  # Log file path
         }
     )
 
@@ -68,19 +72,20 @@ def convert_to_parquet():
     from glob import glob
     from pathlib import Path
 
-    from utils import jl_to_parquet
+    from utils import csv_to_parquet
 
-    OUTPUT_FILEPATHS = glob("data/outputs/*.jl")
+    # TODO: get paths from scrapy.cfg?
+    OUTPUT_FILEPATHS = glob("data/outputs/*.csv")
 
     # create parquet for each spider output
     for o in OUTPUT_FILEPATHS:
-        jl_to_parquet(
+        csv_to_parquet(
             input_paths=[o],
             output_path=Path("data/s3/news") / f"{Path(o).stem}.parquet",
         )
 
     # create consolidated parquet for all spider outputs
-    jl_to_parquet(
+    csv_to_parquet(
         input_paths=OUTPUT_FILEPATHS,
         output_path="data/s3/news.parquet",
     )
