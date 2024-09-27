@@ -14,6 +14,7 @@ def run_spider():
     from news_scraper.spiders import (
         BusinessStandardSpider,
         BusinessTodaySpider,
+        CnbcTv18Spider,
         EconomicTimesSpider,
         FinancialExpressSpider,
         FirstPostSpider,
@@ -64,17 +65,23 @@ def run_spider():
     process.crawl(TheHinduSpider)
     process.crawl(TheHinduBusinessLineSpider)
     process.crawl(ZeeNewsSpider)
+    process.crawl(CnbcTv18Spider)
     process.start()
 
 
 @task
 def convert_to_parquet():
+    """
+    # TODO: specify the schema for each column
+    """
+
     from glob import glob
     from pathlib import Path
 
+    # ! TODO: There is problem with relative imports. `from utils import csv_to_parquet` works while running locally but when prefect server executes a flow, it needs to be `from etl_pipeline.utils import csv_to_parquet`. Or else it fails with the following error: `ModuleNotFoundError: No module named 'utils'`
     from utils import csv_to_parquet
 
-    # TODO: get paths from scrapy.cfg?
+    # ! TODO: get paths from scrapy.cfg?
     OUTPUT_FILEPATHS = glob("data/outputs/*.csv")
 
     # create parquet for each spider output
@@ -93,6 +100,7 @@ def convert_to_parquet():
 
 @task(log_prints=True)
 def upload_to_s3():
+    # ! TODO: There is problem with relative imports. `from utils import csv_to_parquet` works while running locally but when prefect server executes a flow, it needs to be `from etl_pipeline.utils import csv_to_parquet`. Or else it fails with the following error: `ModuleNotFoundError: No module named 'utils'`
     from utils import upload_folder_to_s3
 
     upload_folder_to_s3(
@@ -110,4 +118,7 @@ def scraping_flow():
 
 if __name__ == "__main__":
     # scraping_flow()
-    scraping_flow.serve(name="news_scraper")
+    scraping_flow.serve(
+        name="news_scraper",
+        cron="0 * * * *",  # runs every one hour
+    )

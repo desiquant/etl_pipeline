@@ -1,0 +1,14 @@
+[Unit]
+Description=Prefect Agent
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/etl_pipeline
+ExecStart=/root/etl_pipeline/.venv/bin/python etl_pipeline/news_scraper_flow.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

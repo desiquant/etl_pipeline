@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 User=root
-ExecStart=/root/.local/bin/prefect server start --host 0.0.0.0
+ExecStart=/root/etl_pipeline/.venv/bin/prefect server start --host 0.0.0.0
 Restart=always
 RestartSec=5
 
