@@ -14,6 +14,7 @@ setup(
         "pyarrow",
         # "news_scraper @ file:///home/skd/Projects/desiquant-news_scraper",
         "news_scraper @ git+https://github.com/desiquant/news_scraper.git@master",
+        "loguru",
     ],
     extras_require={
         "test": [

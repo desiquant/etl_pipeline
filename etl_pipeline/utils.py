@@ -8,6 +8,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from dotenv import load_dotenv
+from loguru import logger
 
 
 def csv_to_parquet(input_paths: List[str], output_path: str):
@@ -48,8 +49,11 @@ def upload_folder_to_s3(local_folder: str, remote_folder: str):
         endpoint_url=os.getenv("AWS_S3_ENDPOINT_URL"),
     )
 
-    with ThreadPoolExecutor() as e:
+    print("uploading folder:", local_folder.absolute())
 
+    with ThreadPoolExecutor() as e:
+        # TODO: Currently, if an error in raised in upload_file_to_s3. The prefect flow is shown as success. We need to show failed threaded functions to prefect output.
+        @logger.catch
         def upload_file_to_s3(file_path, s3_key):
             s3.upload_file(str(file_path), os.getenv("AWS_S3_BUCKET"), str(s3_key))
             print("uploaded:", file_path, s3_key)
