@@ -13,6 +13,7 @@
 - Minio Service + Configuration - Access Keys, Secrets, etc.
 - Nginx
 - Add services to systemctl
+- Make sure the systemd services user has the necessary config files used for each library like `~/.prefect`, `~/.aws` etc.
 
   Setup up SSL:
 

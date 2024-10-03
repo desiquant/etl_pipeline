@@ -16,6 +16,7 @@ terraform.tfvars
 
 # dev
 demo.ipynb
+cache/
 
 # secrets
 .env

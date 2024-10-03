@@ -1,4 +1,5 @@
 from prefect import flow, task
+from prefect.artifacts import create_markdown_artifact
 
 
 @task
@@ -78,6 +79,8 @@ def convert_to_parquet():
     from glob import glob
     from pathlib import Path
 
+    import pandas as pd
+
     # ! TODO: There is problem with relative imports. `from utils import csv_to_parquet` works while running locally but when prefect server executes a flow, it needs to be `from etl_pipeline.utils import csv_to_parquet`. Or else it fails with the following error: `ModuleNotFoundError: No module named 'utils'`
     from utils import csv_to_parquet
 
@@ -95,6 +98,13 @@ def convert_to_parquet():
     csv_to_parquet(
         input_paths=OUTPUT_FILEPATHS,
         output_path="data/s3/news.parquet",
+    )
+
+    df_news = pd.read_parquet("data/s3/news.parquet", columns=["url"])
+
+    create_markdown_artifact(
+        f"# Total New Articles\n\nThe DataFrame contains a total of {df_news.shape[0]} articles.",
+        description="Articles Count Artifact",
     )
 
 

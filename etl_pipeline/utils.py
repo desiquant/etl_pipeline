@@ -10,6 +10,23 @@ import pyarrow.parquet as pq
 from dotenv import load_dotenv
 from loguru import logger
 
+load_dotenv(override=True)
+
+
+aws_session = boto3.Session()
+
+# Authenticate AWS with access keys
+# aws_session = boto3.Session(
+#     aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+#     aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+# )
+
+
+s3 = aws_session.client(
+    service_name="s3",
+    endpoint_url=os.getenv("AWS_S3_ENDPOINT_URL"),
+)
+
 
 def csv_to_parquet(input_paths: List[str], output_path: str):
     """Given a list of CSV files, converts them to a single parquet"""
@@ -39,15 +56,6 @@ def upload_folder_to_s3(local_folder: str, remote_folder: str):
     """Uploads an entire folder to S3"""
     local_folder = Path(local_folder)
     remote_folder = Path(remote_folder)
-
-    load_dotenv(override=True)
-
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-        endpoint_url=os.getenv("AWS_S3_ENDPOINT_URL"),
-    )
 
     print("uploading folder:", local_folder.absolute())
 
