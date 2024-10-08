@@ -12,6 +12,8 @@ setup(
         "boto3",
         "pandas",
         "pyarrow",
+        # "news_ml @ file:///home/skd/Projects/desiquant-news_ml",
+        "news_scraper @ git+https://github.com/desiquant/news_ml.git@master",
         # "news_scraper @ file:///home/skd/Projects/desiquant-news_scraper",
         "news_scraper @ git+https://github.com/desiquant/news_scraper.git@master",
         "loguru",
