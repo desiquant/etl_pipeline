@@ -44,8 +44,8 @@ def run_spider():
             # "CLOSESPIDER_ITEMCOUNT": 10,  # Stop after scraping 10 items
             # "CONCURRENT_REQUESTS": 5,  # If default concurrent is used, it ignores itemcount limit
             # "CLOSESPIDER_TIMEOUT": 30,  # Stop after 30 seconds,
-            "DATE_RANGE": ("2024-01-01", datetime.today()),
-            "SCRAPE_MODE": "dump",
+            # "DATE_RANGE": ("2024-01-01", datetime.today()),
+            "SCRAPE_MODE": "update",
             "HTTPCACHE_ENABLED": True,  # Enable HTTP cache
             "LOG_FILE": str(log_file),  # Log file path
         }
