@@ -1,5 +1,3 @@
-import asyncio
-
 import pandas as pd
 from prefect import flow, task
 
@@ -128,6 +126,7 @@ async def label_news_flow():
 
 
 if __name__ == "__main__":
+    # import asyncio
     # asyncio.run(label_news_flow())
     label_news_flow.serve(
         name="news-article-label",

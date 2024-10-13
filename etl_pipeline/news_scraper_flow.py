@@ -81,8 +81,7 @@ def convert_to_parquet():
 
     import pandas as pd
 
-    # ! TODO: There is problem with relative imports. `from utils import csv_to_parquet` works while running locally but when prefect server executes a flow, it needs to be `from etl_pipeline.utils import csv_to_parquet`. Or else it fails with the following error: `ModuleNotFoundError: No module named 'utils'`
-    from utils import csv_to_parquet
+    from etl_pipeline.utils import csv_to_parquet
 
     # ! TODO: get paths from scrapy.cfg?
     OUTPUT_FILEPATHS = glob("data/outputs/*.csv")
@@ -110,8 +109,7 @@ def convert_to_parquet():
 
 @task(log_prints=True)
 def upload_to_s3():
-    # ! TODO: There is problem with relative imports. `from utils import csv_to_parquet` works while running locally but when prefect server executes a flow, it needs to be `from etl_pipeline.utils import csv_to_parquet`. Or else it fails with the following error: `ModuleNotFoundError: No module named 'utils'`
-    from utils import upload_folder_to_s3
+    from etl_pipeline.utils import upload_folder_to_s3
 
     upload_folder_to_s3(
         local_folder="data/s3",
