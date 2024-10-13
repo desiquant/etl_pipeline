@@ -12,11 +12,11 @@ setup(
         "boto3",
         "pandas",
         "pyarrow",
-        # "news_ml @ file:///home/skd/Projects/desiquant-news_ml",
-        "news_scraper @ git+https://github.com/desiquant/news_ml.git@master",
-        # "news_scraper @ file:///home/skd/Projects/desiquant-news_scraper",
-        "news_scraper @ git+https://github.com/desiquant/news_scraper.git@master",
         "loguru",
+        # NOTE: Ensure the client has SSH access to these repositories
+        "news_ml @ git+ssh://git@github.com/desiquant/news_ml.git",
+        "news_scraper @ git+ssh://git@github.com/desiquant/news_scraper.git",
+        "scraper @ git+ssh://git@github.com/desiquant/scraper.git",
     ],
     extras_require={
         "test": [
