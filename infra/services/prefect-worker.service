@@ -1,0 +1,12 @@
+[Unit]
+Description=Prefect worker
+
+[Service]
+User=prefect
+WorkingDirectory=/root/etl_pipeline
+ExecStart=/root/etl_pipeline/.venv/bin/prefect worker start --pool local
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
