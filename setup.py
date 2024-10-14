@@ -7,7 +7,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "scrapy",
-        "prefect",
+        "prefect[shell]",
         "python-dotenv",
         "boto3",
         "pandas",
