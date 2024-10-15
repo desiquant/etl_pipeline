@@ -9,6 +9,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from dotenv import load_dotenv
 from loguru import logger
+from prefect import task
 from prefect_shell import ShellOperation
 
 load_dotenv(override=True)
@@ -53,6 +54,7 @@ def csv_to_parquet(input_paths: List[str], output_path: str):
     return output_path
 
 
+@task
 async def sync_s3(include: list[str] = []):
     local_dir = "./data/s3"  # TODO: make this dynamic path
     remote_dir = f"s3://{os.getenv('AWS_S3_BUCKET')}/data"
