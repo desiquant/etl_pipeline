@@ -65,7 +65,7 @@ async def sync_s3(include: list[str] = []):
 
     # TODO: make this dynamic path
     await ShellOperation(
-        commands=[f"aws s3 sync {local_dir} {remote_dir} {include_flags}"]
+        commands=[f"aws s3 sync {local_dir} {remote_dir} {include_flags} --size-only"]
     ).run()
 
 
