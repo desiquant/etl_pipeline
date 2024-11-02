@@ -97,8 +97,8 @@ def load_json(file_path: str):
     with file.open("r") as f:
         return json.load(f)
 
-def write_json(file_path: str, data: Dict[str, Any]):
-    # Convert pd.Timestamp objects to strings in the desired format
+def write_latest_dates_json(file_path: str, data: Dict[str, Any]):
+    
     serializable_data = {
         key: (value.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] if isinstance(value, pd.Timestamp) else value)
         for key, value in data.items()
@@ -131,7 +131,6 @@ def number_of_new_entries(local_dir: str, file_path: str):
             df_new = df[df["date"] > last_known_entry]
             markdown_dict[symbol] = len(df_new)
             
-            # Update latest date if new entries exist
             if not df_new.empty:
                 latest_dates[symbol] = df_new["date"].max().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         else:
@@ -139,15 +138,15 @@ def number_of_new_entries(local_dir: str, file_path: str):
             latest_dates[symbol] = DEFAULT_TIMESTAMP
             markdown_dict[symbol] = 0
 
-    write_json(file_path, latest_dates)
+    write_latest_dates_json(file_path, latest_dates)
 
     return markdown_dict
 
-def update_latest_dates(local_dir: str, file_path: str, default_timestamp: pd.Timestamp = pd.Timestamp("1970-01-01 00:00:00.000")):
+def update_json_with_latest_dates(local_dir: str, file_path: str, default_timestamp: pd.Timestamp = pd.Timestamp("1970-01-01 00:00:00.000")):
     """
-    Loads the latest_dateInfo json, looks the data parquet to set the keys with the latest available dates, if now data available
-    set default value
+    Loads the latest_dateInfo json, looks the data parquet to set the keys with the latest available dates, if data unavailable set the symbol with the default value.
     """
+    # TODO: Might need to add parquet download from s3 incase of file unavailability locally
     latest_dates = load_json(file_path)
     
     for symbol in latest_dates.keys():
@@ -159,11 +158,9 @@ def update_latest_dates(local_dir: str, file_path: str, default_timestamp: pd.Ti
             latest_date = df["date"].max()
             latest_dates[symbol] = latest_date.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         else:
-            # Set the default date if no parquet file is found
             print(f"No parquet file found for {symbol}. Setting default date.")
             latest_dates[symbol] = default_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     
     # Write the updated latest dates back to the JSON file
-    write_json(file_path, latest_dates)
-    return latest_dates
+    write_latest_dates_json(file_path, latest_dates)
 
