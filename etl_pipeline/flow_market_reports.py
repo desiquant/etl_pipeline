@@ -5,7 +5,7 @@ from scraper.data.annual_reports import AnnualReports_Scraper
 from scraper.data.annual_reports.nse import nse_cookies
 
 from etl_pipeline.symbols import nifty_50_symbols
-from etl_pipeline.utils import sync_s3,number_of_new_entries,update_json_with_latest_dates
+from etl_pipeline.utils import sync_s3,number_of_new_entries,update_csv_with_latest_dates
 from prefect.artifacts import create_table_artifact
 
 
@@ -23,7 +23,7 @@ async def nifty_50_announcements(source: str):
     an_scraper = Announcements_Scraper(test_run="trial")
 
     #load latest dates before scraping
-    update_json_with_latest_dates(local_dir="./data/s3/announcements/bse",file_path="./data/scraper_metaInfo/latest_Announcementdate.json")
+    update_csv_with_latest_dates(local_dir="./data/s3/announcements/bse",file_path="./scraper_metaInfo/latest_dates/latest_Announcementdate.csv")
 
     await an_scraper.scrape(
         nifty_50_symbols[2:4],
@@ -33,7 +33,7 @@ async def nifty_50_announcements(source: str):
 
 @task
 async def create_announcements_artifact():
-    artifact_dict = number_of_new_entries(local_dir="./data/s3/announcements/bse",file_path="./data/scraper_metaInfo/latest_Announcementdate.json")
+    artifact_dict = number_of_new_entries(local_dir="./data/s3/announcements/bse",file_path="./scraper_metaInfo/latest_dates/latest_Announcementdate.csv")
     # Convert dictionary to a list of dictionaries for the table format
     artifact_dict = [{"Symbol": k, "New Entries": v} for k, v in artifact_dict.items()]
 

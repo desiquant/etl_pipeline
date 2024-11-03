@@ -5,7 +5,7 @@ __pycache__/
 
 # scraper
 .scrapy/
-data/s3
+data/
 *.log
 
 # terraform

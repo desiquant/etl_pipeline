@@ -1,7 +1,7 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import List,Dict,Any
+from typing import List
 
 import boto3
 import pandas as pd
@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 from loguru import logger
 from prefect import task
 from prefect_shell import ShellOperation
-import json
 
 load_dotenv(override=True)
 
@@ -30,7 +29,6 @@ s3 = aws_session.client(
     endpoint_url=os.getenv("AWS_S3_ENDPOINT_URL"),
 )
 
-DEFAULT_TIMESTAMP = pd.Timestamp("1970-01-01 00:00:00.000")
 
 def csv_to_parquet(input_paths: List[str], output_path: str):
     """Given a list of CSV files, converts them to a single parquet"""
@@ -90,77 +88,57 @@ def upload_folder_to_s3(local_folder: str, remote_folder: str):
 
                 e.submit(upload_file_to_s3, file_path, s3_key)
 
-def load_json(file_path: str):
-    file = Path(file_path)
-    if not file.exists():
-        raise FileNotFoundError(f"{file_path} does not exist.")
-    with file.open("r") as f:
-        return json.load(f)
-
-def write_latest_dates_json(file_path: str, data: Dict[str, Any]):
-    
-    serializable_data = {
-        key: (value.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] if isinstance(value, pd.Timestamp) else value)
-        for key, value in data.items()
-    }
-    with open(file_path, "w") as f:
-        json.dump(serializable_data, f, indent=4)
-
-
-def get_last_known_entry(symbol: str, latest_dates: Dict[str, str], default_timestamp: pd.Timestamp = DEFAULT_TIMESTAMP):
-    """Retrieves the value of the symbol from the json, if value is none default value is returned"""
-
-    last_known_entry = latest_dates.get(symbol, None)
-    return pd.to_datetime(last_known_entry or default_timestamp)
-
 def number_of_new_entries(local_dir: str, file_path: str):
     """Find no of new entries for each of the symbols from the scraped announcements parquet"""
 
     markdown_dict = {}
-    latest_dates = load_json(file_path)
+    latest_dates = pd.read_csv(file_path,index_col=0)
+    latest_dates['Date'] = pd.to_datetime(latest_dates['Date'],errors='coerce')
     
-    for symbol in latest_dates.keys():
+    for symbol in latest_dates.index:
         # Retrieve the last known entry date for the symbol
-        last_known_entry = get_last_known_entry(symbol,latest_dates)
+        last_known_entry = latest_dates.loc[symbol,'Date']
         
-        parquet_file = Path(f"{local_dir}/{symbol}.parquet")
+        parquet_file = Path(os.path.join(local_dir, f"{symbol}.parquet"))
 
         if parquet_file.exists():
             df = pd.read_parquet(parquet_file)
-            # Filter for new entries
-            df_new = df[df["date"] > last_known_entry]
-            markdown_dict[symbol] = len(df_new)
-            
-            if not df_new.empty:
-                latest_dates[symbol] = df_new["date"].max().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            if pd.isna(last_known_entry):
+                markdown_dict[symbol] = len(df)
+                latest_dates.loc[symbol,'Date'] = df['date'].max() 
+            else:
+                # Filter for new entries
+                df_new = df[df["date"] > last_known_entry]
+                markdown_dict[symbol] = len(df_new)
+                
+                if not df_new.empty:
+                    latest_dates.loc[symbol,'Date'] = df_new["date"].max()
         else:
             print(f"Warning: Parquet file for {symbol} does not exist.")
-            latest_dates[symbol] = DEFAULT_TIMESTAMP
             markdown_dict[symbol] = 0
 
-    write_latest_dates_json(file_path, latest_dates)
+    latest_dates.to_csv(file_path)
 
     return markdown_dict
 
-def update_json_with_latest_dates(local_dir: str, file_path: str, default_timestamp: pd.Timestamp = pd.Timestamp("1970-01-01 00:00:00.000")):
+def update_csv_with_latest_dates(local_dir: str, file_path: str):
     """
     Loads the latest_dateInfo json, looks the data parquet to set the keys with the latest available dates, if data unavailable set the symbol with the default value.
     """
     # TODO: Might need to add parquet download from s3 incase of file unavailability locally
-    latest_dates = load_json(file_path)
+    latest_dates = pd.read_csv(file_path,index_col=0)
+    latest_dates['Date'] = pd.to_datetime(latest_dates['Date'],errors='coerce')
     
-    for symbol in latest_dates.keys():
-        parquet_file = Path(f"{local_dir}/{symbol}.parquet")
+    for symbol in latest_dates.index:
+        parquet_file = Path(os.path.join(local_dir, f"{symbol}.parquet"))
         
         if parquet_file.exists():
             df = pd.read_parquet(parquet_file)
             # Update with the latest date in the parquet file
-            latest_date = df["date"].max()
-            latest_dates[symbol] = latest_date.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            latest_dates.loc[symbol,'Date'] = df['date'].max() 
         else:
             print(f"No parquet file found for {symbol}. Setting default date.")
-            latest_dates[symbol] = default_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            latest_dates.loc[symbol,'Date'] = pd.NaT
     
-    # Write the updated latest dates back to the JSON file
-    write_latest_dates_json(file_path, latest_dates)
+    latest_dates.to_csv(file_path)
 
